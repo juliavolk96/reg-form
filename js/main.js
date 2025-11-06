@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'last-name': validators.validateName,
       'email': validators.validateEmail,
       'password': validators.validatePassword,
-      'password-confirm': (value) => validators.validateConfirmPassword(formEl.querySelector('[data-field="password"]').value, value),
+      'password-confirm': (value, values) => validators.validateConfirmPassword(values.password, value),
       'birth-day': validators.validateBirthDay,
     },
     apiClient: async (data) => {
