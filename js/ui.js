@@ -1,5 +1,3 @@
-import { clearFieldState } from "./ui.js";
-
 export function setFieldValid(element) {
   element.classList.remove('invalid');
   element.classList.add('valid');
@@ -16,13 +14,13 @@ export function clearFieldState(element) {
 }
 
 export function setErrorMessage(fieldId, message) {
-  let element = document.getElementById(fieldId + '-error');
+  let element = document.querySelector(`[data-error="${fieldId}"]`);
   if (!element) return;
   element.textContent = message || '';
 }
 
 export function setFormStatus(message) {
-  let element = document.getElementById('form-status');
+  let element = document.querySelector('[data-status]');
   if (!element) return;
   element.textContent = message || '';
 }
