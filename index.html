@@ -9,55 +9,69 @@
 <body>
   <main>
     <h1>Registration Form</h1>
-    <form class="registration-form" novalidate aria-describedby="form-status">
+
+    <form class="registration-form" novalidate data-form aria-describedby="form-status">
       <fieldset>
         <legend>Create Account</legend>
 
         <div class="form-row">
-          <label for="first-name">First Name</label>
-          <input type="text" id="first-name" name="first-name" autocomplete="given-name" aria-describedby="first-name-error" required>
-          <div class="error" id="first-name-error" aria-live="polite"></div>
+          <label>
+            First Name
+            <input type="text" name="first-name" data-field="first-name" autocomplete="given-name" required aria-describedby="first-name-error">
+          </label>
+          <div class="error" data-error="first-name" aria-live="polite"></div>
         </div>
 
         <div class="form-row">
-          <label for="last-name">Last Name</label>
-          <input type="text" id="last-name" name="last-name" autocomplete="family-name" aria-describedby="last-name-error" required>
-          <div class="error" id="last-name-error" aria-live="polite"></div>
+          <label>
+            Last Name
+            <input type="text" name="last-name" data-field="last-name" autocomplete="family-name" required aria-describedby="last-name-error">
+          </label>
+          <div class="error" data-error="last-name" aria-live="polite"></div>
         </div>
 
         <div class="form-row">
-          <label for="email">Email</label>
-          <input type="email" id="email" name="email" autocomplete="email" aria-describedby="email-error" required>
-          <div class="error" id="email-error" aria-live="polite"></div>
+          <label>
+            Email
+            <input type="email" name="email" data-field="email" autocomplete="email" required aria-describedby="email-error">
+          </label>
+          <div class="error" data-error="email" aria-live="polite"></div>
         </div>
 
         <div class="form-row">
-          <label for="password">Password</label>
-          <input type="password" id="password" name="password" aria-describedby="password-error" required>
-          <div class="hint" id="password-hint">At least 8 characters, 1 number, 1 uppercase letter, 1 special character.</div>
-          <div class="error" id="password-error" aria-live="polite"></div>
+          <label>
+            Password
+            <input type="password" name="password" data-field="password" required aria-describedby="password-error">
+          </label>
+          <div class="hint" data-hint="password">At least 8 characters, 1 number, 1 uppercase letter, 1 special character.</div>
+          <div class="error" data-error="password" aria-live="polite"></div>
         </div>
 
         <div class="form-row">
-          <label for="password-confirm">Confirm Password</label>
-          <input type="password" id="password-confirm" name="password-confirm" aria-describedby="password-confirm-error" required>
-          <div class="error" id="password-confirm-error" aria-live="polite"></div>
+          <label>
+            Confirm Password
+            <input type="password" name="password-confirm" data-field="password-confirm" required aria-describedby="password-confirm-error">
+          </label>
+          <div class="error" data-error="password-confirm" aria-live="polite"></div>
         </div>
 
         <div class="form-row">
-          <label for="birth-day">Date of Birth</label>
-          <input type="date" id="birth-day" name="birth-day" aria-describedby="birth-day-error" required>
-          <div class="error" id="birth-day-error" aria-live="polite"></div>
+          <label>
+            Date of Birth
+            <input type="date" name="birth-day" data-field="birth-day" required aria-describedby="birth-day-error">
+          </label>
+          <div class="error" data-error="birth-day" aria-live="polite"></div>
         </div>
 
         <div class="form-actions">
-          <button type="submit" id="form-button" disabled>Submit</button>
+          <button type="submit" data-button disabled>Submit</button>
         </div>
       </fieldset>
     </form>
 
-    <div id="form-status" aria-live="polite"></div>
+    <div data-status aria-live="polite"></div>
   </main>
+
   <script type="module" src="js/main.js"></script>
 </body>
 </html>
