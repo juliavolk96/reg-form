@@ -1,59 +1,40 @@
 import * as validators from './validators.js';
 import * as ui from './ui.js';
 
-const ids = ['first-name','last-name','email','password','password-confirm','birth-day'];
+const fieldNames = ['first-name','last-name','email','password','password-confirm','birth-day'];
 
-export const formState = {
-  values: {
-    'first-name': '',
-    'last-name': '',
-    'email': '',
-    'password': '',
-    'password-confirm': '',
-    'birth-day': ''
-  },
-  validity: {
-    'first-name': false,
-    'last-name': false,
-    'email': false,
-    'password': false,
-    'password-confirm': false,
-    'birth-day': false
-  },
-  errors: {
-    'first-name': null,
-    'last-name': null,
-    'email': null,
-    'password': null,
-    'password-confirm': null,
-    'birth-day': null
-  },
-  isFormValid: false,
-  isSubmitting: false
-};
+export function createFormState() {
+  const values = {};
+  const validity = {};
+  const errors = {};
+  fieldNames.forEach(name => {
+    values[name] = '';
+    validity[name] = false;
+    errors[name] = null;
+  });
+  return { values, validity, errors, isFormValid: false, isSubmitting: false };
+}
 
-function updateFormValidity(){
+function updateFormValidity(formState, form) {
   formState.isFormValid = Object.values(formState.validity).every(Boolean);
-  const form = document.getElementById('registration-form');
-  if(formState.isFormValid){
+  const submitButton = form.querySelector('[data-button]');
+  if (formState.isFormValid) {
     form.classList.add('valid');
     form.classList.remove('invalid');
-    document.getElementById('form-button').disabled = false;
+    if (submitButton) submitButton.disabled = false;
   } else {
     form.classList.remove('valid');
     form.classList.add('invalid');
-    document.getElementById('form-button').disabled = true;
+    if (submitButton) submitButton.disabled = true;
   }
 }
 
-function validateField(id, showMessage = true){
-  let value = formState.values[id];
+function validateField(fieldName, formState, form, showMessage = true) {
+  let value = formState.values[fieldName];
   let res = { valid:false, message: 'This field is required' };
 
-  switch(id) {
+  switch(fieldName) {
     case 'first-name':
-      res = validators.validateName(value);
-      break;
     case 'last-name':
       res = validators.validateName(value);
       break;
@@ -73,107 +54,108 @@ function validateField(id, showMessage = true){
       res = { valid:false, message: 'Unknown field' };
   }
 
-  formState.validity[id] = res.valid;
-  formState.errors[id] = res.message;
+  formState.validity[fieldName] = res.valid;
+  formState.errors[fieldName] = res.message;
 
-  let inputElement = document.getElementById(id);
-  if(res.valid) {
+  const inputElement = form.querySelector(`[data-field="${fieldName}"]`);
+  if (!inputElement) return;
+
+  if (res.valid) {
     ui.setFieldValid(inputElement);
-    if(showMessage) {
-    ui.setErrorMessage(id, '');
-  }
+    if (showMessage) ui.setErrorMessage(fieldName, form, '');
   } else {
     ui.setFieldInvalid(inputElement);
-    if(showMessage) {
-      ui.setErrorMessage(id, res.message);
-    }
+    if (showMessage) ui.setErrorMessage(fieldName, form, res.message);
   }
 
-  if (id === 'password') {
-    let confirmId = 'password-confirm';
-    let confirmElement = document.getElementById(confirmId);
-    let confirmRes = validators.validateConfirmPassword(formState.values['password'], formState.values['password-confirm']);
-    formState.validity[confirmId] = confirmRes.valid;
-    formState.errors[confirmId] = confirmRes.message;
+  if (fieldName === 'password') {
+    const confirmField = 'password-confirm';
+    const confirmEl = form.querySelector(`[data-field="${confirmField}"]`);
+    if (confirmEl) {
+      const confirmRes = validators.validateConfirmPassword(formState.values['password'], formState.values['password-confirm']);
+      formState.validity[confirmField] = confirmRes.valid;
+      formState.errors[confirmField] = confirmRes.message;
 
-    if(confirmElement.classList.contains('invalid') || confirmElement.classList.contains('valid')) {
-      if(confirmRes.valid) {
-        ui.setFieldValid(confirmElement);
-        ui.setErrorMessage(confirmId, '');
-      } else {
-        ui.setFieldInvalid(confirmElement);
-        ui.setErrorMessage(confirmId, confirmRes.message);
+      if (confirmEl.classList.contains('valid') || confirmEl.classList.contains('invalid')) {
+        if (confirmRes.valid) {
+          ui.setFieldValid(confirmEl);
+          ui.setErrorMessage(confirmField, form, '');
+        } else {
+          ui.setFieldInvalid(confirmEl);
+          ui.setErrorMessage(confirmField, form, confirmRes.message);
+        }
       }
     }
   }
 
-  updateFormValidity();
+  updateFormValidity(formState, form);
 }
 
 export function attachFormBehavior() {
-  const form = document.getElementById('registration-form');
-  if (!form) {
-    return;
-  }
+  const forms = document.querySelectorAll('[data-form]');
+  forms.forEach(form => {
+    const formState = createFormState();
 
-  ids.forEach((id) => {
-    let element = document.getElementById(id);
+    fieldNames.forEach(name => {
+      const input = form.querySelector(`[data-field="${name}"]`);
+      if (!input) return;
 
-    if(!element) {
-      return;
-    }
+      input.addEventListener('input', e => {
+        formState.values[name] = e.target.value.trim();
+        validateField(name, formState, form, false);
+      }, { passive: true });
 
-    element.addEventListener('input', (e) => {
-      formState.values[id] = e.target.value;
-      formState.values[id] = e.target.value.trim();
-      validateField(id, false);
-    }, { passive: true });
-
-    element.addEventListener('blur', (e) => {
-        formState.values[id] = e.target.value;
-        formState.values[id] = e.target.value.trim();
-        validateField(id, true);
-    });
-  });
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    ids.forEach(id => validateField(id, true));
-    if(!formState.isFormValid) {
-      let firstInvalid = ids.find(id => !formState.validity[id]);
-      if(firstInvalid) {
-        document.getElementById(firstInvalid).focus();
-      }
-      return;
-    }
-
-    try {
-      formState.isSubmitting = true;
-      document.getElementById('form-button').disabled = true;
-      ui.setFormStatus('Submitting...');
-
-      await new Promise((res) => setTimeout(res, 900));
-
-      ui.setFormStatus('Form submitted successfully!');
-
-      form.reset();
-
-      ids.forEach(id => {
-        formState.values[id] = '';
-        formState.validity[id] = false;
-        formState.errors[id] = null;
-        let element = document.getElementById(id);
-        if(element) {
-          ui.clearFieldState(element);
-          ui.setErrorMessage(id, '');
-        }
+      input.addEventListener('blur', e => {
+        formState.values[name] = e.target.value.trim();
+        validateField(name, formState, form, true);
       });
-      updateFormValidity();
-    } catch(err) {
-      ui.setFormStatus('An error occurred during submission. Try again.');
-      document.getElementById('form-button').disabled = false;
-    } finally {
-      formState.isSubmitting = false;
-    }
+    });
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      fieldNames.forEach(name => validateField(name, formState, form, true));
+
+      if (!formState.isFormValid) {
+        const firstInvalid = fieldNames.find(name => !formState.validity[name]);
+        if (firstInvalid) {
+          const el = form.querySelector(`[data-field="${firstInvalid}"]`);
+          if (el) el.focus();
+        }
+        return;
+      }
+
+      try {
+        formState.isSubmitting = true;
+        const submitButton = form.querySelector('[data-button]');
+        if (submitButton) submitButton.disabled = true;
+        ui.setFormStatus('Submitting...', form);
+
+        await new Promise(res => setTimeout(res, 900));
+
+        ui.setFormStatus('Form submitted successfully!', form);
+
+        form.reset();
+
+        fieldNames.forEach(name => {
+          formState.values[name] = '';
+          formState.validity[name] = false;
+          formState.errors[name] = null;
+          const inputEl = form.querySelector(`[data-field="${name}"]`);
+          if (inputEl) {
+            ui.clearFieldState(inputEl);
+            ui.setErrorMessage(name, form, '');
+          }
+        });
+
+        updateFormValidity(formState, form);
+
+      } catch (err) {
+        ui.setFormStatus('An error occurred during submission. Try again.', form);
+        const submitButton = form.querySelector('[data-button]');
+        if (submitButton) submitButton.disabled = false;
+      } finally {
+        formState.isSubmitting = false;
+      }
+    });
   });
 }
