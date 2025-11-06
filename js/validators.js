@@ -11,7 +11,7 @@ export function validateName(value) {
     return {valid:false, message: 'Name must be no more than 50 characters long'};
   }
 
-  let regEx = /^[A-Za-zА-Яа-яЁё\-\'\s]+$/u;
+  let regEx = /^[A-Za-z\-\s']+$/;
   if (!regEx.test(userName)) {
     return {valid:false, message: 'Name contains invalid characters'};
   }
