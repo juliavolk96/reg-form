@@ -1,3 +1,5 @@
+import { safeCompare } from './securityUtils.js';
+
 export function validateName(value) {
   const name = (value || '').trim();
 
@@ -24,6 +26,8 @@ export function validateEmail(value) {
 export function validatePassword(value) {
   if (!value) return { valid: false, message: 'Please enter your password' };
 
+  if (value.length > 128) return { valid: false, message: 'Password is too long' };
+
   const regEx = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
   if (!regEx.test(value)) {
     return {
@@ -33,15 +37,6 @@ export function validatePassword(value) {
   }
 
   return { valid: true, message: null };
-}
-
-function safeCompare(a = '', b = '') {
-  if (a.length !== b.length) return false;
-  let result = 0;
-  for (let i = 0; i < a.length; i++) {
-    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-  return result === 0;
 }
 
 export function validateConfirmPassword(password, confirmPassword) {
