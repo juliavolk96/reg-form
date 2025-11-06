@@ -8,68 +8,68 @@
 </head>
 <body>
   <main>
-    <h1>Registration Form</h1>
+    <h1 class="form__title">Registration Form</h1>
 
-    <form class="registration-form" novalidate data-form aria-describedby="form-status">
-      <fieldset>
-        <legend>Create Account</legend>
+    <form class="form" novalidate data-form aria-describedby="form-status">
+      <fieldset class="form__fieldset">
+        <legend class="form__legend">Create Account</legend>
 
-        <div class="form-row">
-          <label>
+        <div class="form__row">
+          <label class="form__label">
             First Name
-            <input type="text" name="first-name" data-field="first-name" autocomplete="given-name" required aria-describedby="first-name-error">
+            <input class="form__input" type="text" name="first-name" data-field="first-name" autocomplete="given-name" required aria-describedby="first-name-error">
           </label>
-          <div class="error" data-error="first-name" aria-live="polite"></div>
+          <div class="form__error" data-error="first-name" aria-live="polite"></div>
         </div>
 
-        <div class="form-row">
-          <label>
+        <div class="form__row">
+          <label class="form__label">
             Last Name
-            <input type="text" name="last-name" data-field="last-name" autocomplete="family-name" required aria-describedby="last-name-error">
+            <input class="form__input" type="text" name="last-name" data-field="last-name" autocomplete="family-name" required aria-describedby="last-name-error">
           </label>
-          <div class="error" data-error="last-name" aria-live="polite"></div>
+          <div class="form__error" data-error="last-name" aria-live="polite"></div>
         </div>
 
-        <div class="form-row">
-          <label>
+        <div class="form__row">
+          <label class="form__label">
             Email
-            <input type="email" name="email" data-field="email" autocomplete="email" required aria-describedby="email-error">
+            <input class="form__input" type="email" name="email" data-field="email" autocomplete="email" required aria-describedby="email-error">
           </label>
-          <div class="error" data-error="email" aria-live="polite"></div>
+          <div class="form__error" data-error="email" aria-live="polite"></div>
         </div>
 
-        <div class="form-row">
-          <label>
+        <div class="form__row">
+          <label class="form__label">
             Password
-            <input type="password" name="password" data-field="password" required aria-describedby="password-error">
+            <input class="form__input" type="password" name="password" data-field="password" required aria-describedby="password-error">
           </label>
-          <div class="hint" data-hint="password">At least 8 characters, 1 number, 1 uppercase letter, 1 special character.</div>
-          <div class="error" data-error="password" aria-live="polite"></div>
+          <div class="form__hint" data-hint="password">At least 8 characters, 1 number, 1 uppercase letter, 1 special character.</div>
+          <div class="form__error" data-error="password" aria-live="polite"></div>
         </div>
 
-        <div class="form-row">
-          <label>
+        <div class="form__row">
+          <label class="form__label">
             Confirm Password
-            <input type="password" name="password-confirm" data-field="password-confirm" required aria-describedby="password-confirm-error">
+            <input class="form__input" type="password" name="password-confirm" data-field="password-confirm" required aria-describedby="password-confirm-error">
           </label>
-          <div class="error" data-error="password-confirm" aria-live="polite"></div>
+          <div class="form__error" data-error="password-confirm" aria-live="polite"></div>
         </div>
 
-        <div class="form-row">
-          <label>
+        <div class="form__row">
+          <label class="form__label">
             Date of Birth
-            <input type="date" name="birth-day" data-field="birth-day" required aria-describedby="birth-day-error">
+            <input class="form__input" type="date" name="birth-day" data-field="birth-day" required aria-describedby="birth-day-error">
           </label>
-          <div class="error" data-error="birth-day" aria-live="polite"></div>
+          <div class="form__error" data-error="birth-day" aria-live="polite"></div>
         </div>
 
-        <div class="form-actions">
-          <button type="submit" data-button disabled>Submit</button>
+        <div class="form__actions">
+          <button class="form__submit" type="submit" data-button disabled>Submit</button>
         </div>
       </fieldset>
     </form>
 
-    <div data-status aria-live="polite"></div>
+    <div class="form__status" data-status aria-live="polite"></div>
   </main>
 
   <script type="module" src="js/main.js"></script>
