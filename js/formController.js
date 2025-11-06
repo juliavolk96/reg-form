@@ -1,10 +1,9 @@
-import * as validators from './validators.js';
 import * as ui from './ui.js';
 
-const fieldNames = ['first-name','last-name','email','password','password-confirm','birth-day'];
+export function createForm({ root, validators: fieldValidators, apiClient, minAge = 18 }) {
+  const form = root;
+  if (!form) throw new Error('Form element not provided');
 
-// Factory for creating form state
-export function createFormState() {
   const state = {
     values: {},
     validity: {},
@@ -13,157 +12,109 @@ export function createFormState() {
     isSubmitting: false,
   };
 
-  fieldNames.forEach(name => {
-    state.values[name] = '';
-    state.validity[name] = false;
-    state.errors[name] = null;
+  Object.keys(fieldValidators).forEach(field => {
+    state.values[field] = '';
+    state.validity[field] = false;
+    state.errors[field] = null;
   });
 
-  return state;
-}
+  function validateField(fieldName) {
+    const value = state.values[fieldName];
+    const validator = fieldValidators[fieldName];
+    if (!validator) return { valid: false, message: 'Unknown field' };
 
-/**
- * Validate a single field based on its name
- * Returns {valid, message}
- */
-function validateFieldLogic(fieldName, formState) {
-  const value = formState.values[fieldName];
-  switch(fieldName) {
-    case 'first-name':
-    case 'last-name':
-      return validators.validateName(value);
-    case 'email':
-      return validators.validateEmail(value);
-    case 'password':
-      return validators.validatePassword(value);
-    case 'password-confirm':
-      return validators.validateConfirmPassword(
-        formState.values['password'],
-        value
-      );
-    case 'birth-day':
-      return validators.validateBirthDay(value, 18);
-    default:
-      return { valid: false, message: 'Unknown field' };
+    const result = fieldName === 'birth-day' ? validator(value, minAge) : validator(value);
+    state.validity[fieldName] = result.valid;
+    state.errors[fieldName] = result.message;
+
+    updateFieldUI(fieldName);
+
+    if (fieldName === 'password' && 'password-confirm' in state.values && state.values['password-confirm']) {
+      validateField('password-confirm');
+    }
+
+    updateFormValidityUI();
+    return result;
   }
-}
 
-// Update form validity and submit button state
-function updateFormValidityUI(formState, form) {
-  formState.isFormValid = Object.values(formState.validity).every(Boolean);
-  const submitButton = form.querySelector('[data-button]');
-  if (submitButton) submitButton.disabled = !formState.isFormValid;
+  function updateFieldUI(fieldName) {
+    const input = form.querySelector(`[data-field="${fieldName}"]`);
+    if (!input) return;
 
-  form.classList.toggle('valid', formState.isFormValid);
-  form.classList.toggle('invalid', !formState.isFormValid);
-}
+    const { valid, message } = { valid: state.validity[fieldName], message: state.errors[fieldName] };
+    if (valid) ui.setFieldValid(input);
+    else ui.setFieldInvalid(input);
 
-// Apply validation to UI
-function updateFieldUI(fieldName, formState, form) {
-  const input = form.querySelector(`[data-field="${fieldName}"]`);
-  if (!input) return;
-
-  const { valid, message } = formState.errors[fieldName]
-    ? { valid: formState.validity[fieldName], message: formState.errors[fieldName] }
-    : { valid: true, message: '' };
-
-  if (valid) {
-    ui.setFieldValid(input);
-    ui.setErrorMessage(fieldName, '');
-  } else {
-    ui.setFieldInvalid(input);
     ui.setErrorMessage(fieldName, message);
   }
-}
 
-// Main field validation function
-function validateField(fieldName, formState, form) {
-  const result = validateFieldLogic(fieldName, formState);
-
-  formState.validity[fieldName] = result.valid;
-  formState.errors[fieldName] = result.message;
-
-  updateFieldUI(fieldName, formState, form);
-
-  // Special case: if password changes, validate confirm password
-  if (fieldName === 'password' && formState.values['password-confirm']) {
-    validateField('password-confirm', formState, form);
+  function updateFormValidityUI() {
+    state.isFormValid = Object.values(state.validity).every(Boolean);
+    const submitButton = form.querySelector('[data-button]');
+    if (submitButton) submitButton.disabled = !state.isFormValid;
+    form.classList.toggle('valid', state.isFormValid);
+    form.classList.toggle('invalid', !state.isFormValid);
   }
 
-  updateFormValidityUI(formState, form);
-}
+  function handleInput(e) {
+    const fieldName = e.target.dataset.field;
+    if (!fieldName || !(fieldName in state.values)) return;
 
-// Attach form behavior: input, blur, submit
-export function attachFormBehavior() {
-  const forms = document.querySelectorAll('[data-form]');
-  forms.forEach(form => {
-    const formState = createFormState();
+    state.values[fieldName] = fieldName === 'password' ? e.target.value : e.target.value.trim();
+    validateField(fieldName);
+  }
 
-    // Attach listeners to each field
-    fieldNames.forEach(name => {
-      const input = form.querySelector(`[data-field="${name}"]`);
-      if (!input) return;
+  form.addEventListener('input', handleInput, { passive: true });
+  form.addEventListener('blur', handleInput, true);
 
-      input.addEventListener('input', e => {
-        formState.values[name] = e.target.value.trim();
-        validateField(name, formState, form);
-      }, { passive: true });
+  async function handleSubmit(e) {
+    e.preventDefault();
+    Object.keys(state.values).forEach(validateField);
 
-      input.addEventListener('blur', e => {
-        formState.values[name] = e.target.value.trim();
-        validateField(name, formState, form);
-      });
-    });
+    if (!state.isFormValid) {
+      const firstInvalid = Object.keys(state.validity).find(k => !state.validity[k]);
+      const el = form.querySelector(`[data-field="${firstInvalid}"]`);
+      if (el) el.focus();
+      return;
+    }
 
-    // Submit handler
-    form.addEventListener('submit', async e => {
-      e.preventDefault();
+    try {
+      state.isSubmitting = true;
+      const submitButton = form.querySelector('[data-button]');
+      if (submitButton) submitButton.disabled = true;
 
-      // Validate all fields
-      fieldNames.forEach(name => validateField(name, formState, form));
+      ui.setFormStatus('Submitting...');
 
-      if (!formState.isFormValid) {
-        const firstInvalid = fieldNames.find(name => !formState.validity[name]);
-        const el = form.querySelector(`[data-field="${firstInvalid}"]`);
-        if (el) el.focus();
-        return;
-      }
-
-      try {
-        formState.isSubmitting = true;
-        const submitButton = form.querySelector('[data-button]');
-        if (submitButton) submitButton.disabled = true;
-
-        ui.setFormStatus('Submitting...');
-
-        // Fake async submit
+      if (typeof apiClient === 'function') {
+        await apiClient({ ...state.values });
+      } else {
         await new Promise(res => setTimeout(res, 900));
-
-        ui.setFormStatus('Form submitted successfully!');
-
-        // Reset form state
-        form.reset();
-        fieldNames.forEach(name => {
-          formState.values[name] = '';
-          formState.validity[name] = false;
-          formState.errors[name] = null;
-          const inputEl = form.querySelector(`[data-field="${name}"]`);
-          if (inputEl) {
-            ui.clearFieldState(inputEl);
-            ui.setErrorMessage(name, '');
-          }
-        });
-
-        updateFormValidityUI(formState, form);
-
-      } catch (err) {
-        console.error('Form submission error:', err);
-        ui.setFormStatus('An error occurred during submission. Try again.');
-        const submitButton = form.querySelector('[data-button]');
-        if (submitButton) submitButton.disabled = false;
-      } finally {
-        formState.isSubmitting = false;
       }
-    });
-  });
+
+      ui.setFormStatus('Form submitted successfully!');
+
+      form.reset();
+      Object.keys(state.values).forEach(field => {
+        state.values[field] = '';
+        state.validity[field] = false;
+        state.errors[field] = null;
+        const inputEl = form.querySelector(`[data-field="${field}"]`);
+        if (inputEl) ui.clearFieldState(inputEl);
+        ui.setErrorMessage(field, '');
+      });
+
+      updateFormValidityUI();
+    } catch (err) {
+      console.error('Form submission error:', err);
+      ui.setFormStatus('An error occurred during submission. Try again.');
+      const submitButton = form.querySelector('[data-button]');
+      if (submitButton) submitButton.disabled = false;
+    } finally {
+      state.isSubmitting = false;
+    }
+  }
+
+  form.addEventListener('submit', handleSubmit);
+
+  return { state, validateField, submit: handleSubmit };
 }

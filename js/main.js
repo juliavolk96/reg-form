@@ -1,4 +1,5 @@
-import { attachFormBehavior } from './formController.js';
+import { createForm } from './formController.js';
+import * as validators from './validators.js';
 
 function setBirthDayMax() {
   const inputs = document.querySelectorAll('input[data-field="birth-day"]');
@@ -6,15 +7,30 @@ function setBirthDayMax() {
 
   const today = new Date();
   today.setFullYear(today.getFullYear() - 18);
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2, '0');
-  const dd = String(today.getDate()).padStart(2, '0');
-  const maxDate = `${yyyy}-${mm}-${dd}`;
+  const maxDate = today.toISOString().split('T')[0];
 
   inputs.forEach(input => input.max = maxDate);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   setBirthDayMax();
-  attachFormBehavior();
+
+  const formEl = document.querySelector('[data-form]');
+  if (!formEl) return;
+
+  createForm({
+    root: formEl,
+    validators: {
+      'first-name': validators.validateName,
+      'last-name': validators.validateName,
+      'email': validators.validateEmail,
+      'password': validators.validatePassword,
+      'password-confirm': (value) => validators.validateConfirmPassword(formEl.querySelector('[data-field="password"]').value, value),
+      'birth-day': validators.validateBirthDay,
+    },
+    apiClient: async (data) => {
+      console.log('Submitting data to API', data);
+      await new Promise(res => setTimeout(res, 500));
+    }
+  });
 });
