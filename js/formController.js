@@ -18,22 +18,12 @@ export function createForm({ root, validators: fieldValidators, apiClient, minAg
     state.errors[field] = null;
   });
 
-  function validateField(fieldName) {
+  function computeFieldValidity(fieldName) {
     const value = state.values[fieldName];
     const validator = fieldValidators[fieldName];
     if (!validator) return { valid: false, message: 'Unknown field' };
 
-    const result = fieldName === 'birth-day' ? validator(value, minAge) : validator(value);
-    state.validity[fieldName] = result.valid;
-    state.errors[fieldName] = result.message;
-
-    updateFieldUI(fieldName);
-
-    if (fieldName === 'password' && 'password-confirm' in state.values && state.values['password-confirm']) {
-      validateField('password-confirm');
-    }
-
-    updateFormValidityUI();
+    const result = fieldName === 'birth-day' ? validator(value, minAge, state.values) : validator(value, state.values);
     return result;
   }
 
@@ -56,6 +46,21 @@ export function createForm({ root, validators: fieldValidators, apiClient, minAg
     form.classList.toggle('invalid', !state.isFormValid);
   }
 
+  function validateField(fieldName) {
+    const result = computeFieldValidity(fieldName);
+    state.validity[fieldName] = result.valid;
+    state.errors[fieldName] = result.message;
+
+    updateFieldUI(fieldName);
+
+    if (fieldName === 'password' && 'password-confirm' in state.values && state.values['password-confirm']) {
+      validateField('password-confirm');
+    }
+
+    updateFormValidityUI();
+    return result;
+  }
+
   function handleInput(e) {
     const fieldName = e.target.dataset.field;
     if (!fieldName || !(fieldName in state.values)) return;
@@ -64,7 +69,7 @@ export function createForm({ root, validators: fieldValidators, apiClient, minAg
     validateField(fieldName);
   }
 
-  form.addEventListener('input', handleInput, { passive: true });
+  form.addEventListener('input', handleInput);
   form.addEventListener('blur', handleInput, true);
 
   async function handleSubmit(e) {
@@ -92,17 +97,7 @@ export function createForm({ root, validators: fieldValidators, apiClient, minAg
       }
 
       ui.setFormStatus('Form submitted successfully!');
-
-      form.reset();
-      Object.keys(state.values).forEach(field => {
-        state.values[field] = '';
-        state.validity[field] = false;
-        state.errors[field] = null;
-        const inputEl = form.querySelector(`[data-field="${field}"]`);
-        if (inputEl) ui.clearFieldState(inputEl);
-        ui.setErrorMessage(field, '');
-      });
-
+      resetFormState(state, form);
       updateFormValidityUI();
     } catch (err) {
       console.error('Form submission error:', err);
@@ -117,4 +112,16 @@ export function createForm({ root, validators: fieldValidators, apiClient, minAg
   form.addEventListener('submit', handleSubmit);
 
   return { state, validateField, submit: handleSubmit };
+}
+
+export function resetFormState(state, form) {
+  form.reset();
+  Object.keys(state.values).forEach(field => {
+    state.values[field] = '';
+    state.validity[field] = false;
+    state.errors[field] = null;
+    const inputEl = form.querySelector(`[data-field="${field}"]`);
+    if (inputEl) ui.clearFieldState(inputEl);
+    ui.setErrorMessage(field, '');
+  });
 }
