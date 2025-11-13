@@ -55,15 +55,13 @@
 
     const results = document.getElementById('results');
 
-   function logTest(section, name, received, expected) {
-    const pass = JSON.stringify(received) === JSON.stringify(expected);
-    const div = document.createElement('div');
-    div.className = pass ? 'test pass' : 'test fail';
-    div.textContent = `${section} - ${name}: ${pass ? 'Passed' : 'Failed'}`;
-    results.appendChild(div);
-  }
-
-
+    function logTest(section, name, received, expected) {
+      const pass = JSON.stringify(received) === JSON.stringify(expected);
+      const div = document.createElement('div');
+      div.className = pass ? 'test pass' : 'test fail';
+      div.textContent = `${section} - ${name}: ${pass ? 'Passed' : 'Failed'}`;
+      results.appendChild(div);
+    }
     runTests(logTest);
   </script>
 </body>
