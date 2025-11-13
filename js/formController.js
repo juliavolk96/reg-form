@@ -1,6 +1,6 @@
-import * as ui from './ui.js';
+import * as defaultUI from './ui.js';
 
-export function createForm({ root, validators: fieldValidators, apiClient, minAge = 18 }) {
+export function createForm({ root, validators: fieldValidators, apiClient, minAge = 18, ui = defaultUI }) {
   const form = root;
   if (!form) throw new Error('Form element not provided');
 
@@ -23,7 +23,10 @@ export function createForm({ root, validators: fieldValidators, apiClient, minAg
     const validator = fieldValidators[fieldName];
     if (!validator) return { valid: false, message: 'Unknown field' };
 
-    const result = fieldName === 'birth-day' ? validator(value, minAge, state.values) : validator(value, state.values);
+    const result = fieldName === 'birth-day'
+      ? validator(value, minAge, state.values)
+      : validator(value, state.values);
+
     return result;
   }
 
@@ -80,6 +83,8 @@ export function createForm({ root, validators: fieldValidators, apiClient, minAg
       const firstInvalid = Object.keys(state.validity).find(k => !state.validity[k]);
       const el = form.querySelector(`[data-field="${firstInvalid}"]`);
       if (el) el.focus();
+      const submitButton = form.querySelector('[data-button]');
+      if (submitButton) submitButton.disabled = false;
       return;
     }
 
@@ -97,7 +102,7 @@ export function createForm({ root, validators: fieldValidators, apiClient, minAg
       }
 
       ui.setFormStatus('Form submitted successfully!');
-      resetFormState(state, form);
+      resetFormState(state, form, ui);
       updateFormValidityUI();
     } catch (err) {
       console.error('Form submission error:', err);
@@ -114,7 +119,7 @@ export function createForm({ root, validators: fieldValidators, apiClient, minAg
   return { state, validateField, submit: handleSubmit };
 }
 
-export function resetFormState(state, form) {
+export function resetFormState(state, form, ui = defaultUI) {
   form.reset();
   Object.keys(state.values).forEach(field => {
     state.values[field] = '';

@@ -1,7 +1,7 @@
 import { createForm } from './formController.js';
 import * as validators from './validators.js';
 
-function setBirthDayMax() {
+export function setBirthDayMax() {
   const inputs = document.querySelectorAll('input[data-field="birth-day"]');
   if (!inputs.length) return;
 
